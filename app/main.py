@@ -278,7 +278,7 @@ hr {
     border-left: 4px solid #3b82f6;
 }
 </style>
-"""""", unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────
 # LOAD ARTIFACTS
@@ -1030,7 +1030,6 @@ else:
             if off_flags:
                 html = " ".join([f'<span class="pill pill-green" style="margin:3px;">{f}</span>' for f in off_flags])
                 st.markdown(f"<div style='display:flex; flex-wrap:wrap; gap:4px;'>{html}</div>", unsafe_allow_html=True)
-
 
 # Footer
 st.markdown("""
