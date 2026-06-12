@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -277,7 +278,7 @@ hr {
     border-left: 4px solid #3b82f6;
 }
 </style>
-""", unsafe_allow_html=True)
+"""""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────
 # LOAD ARTIFACTS
@@ -378,7 +379,7 @@ def risk_color(cls):
 
 def gauge_chart(prob):
     pct = prob * 100
-    color = "#dc2626" if pct >= 65 else "#d97706" if pct >= 40 else "#059669"
+    color = "#dc2626" if pct >= 65 else ("#d97706" if pct >= 40 else "#059669")
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=pct,
@@ -1029,6 +1030,7 @@ else:
             if off_flags:
                 html = " ".join([f'<span class="pill pill-green" style="margin:3px;">{f}</span>' for f in off_flags])
                 st.markdown(f"<div style='display:flex; flex-wrap:wrap; gap:4px;'>{html}</div>", unsafe_allow_html=True)
+
 
 # Footer
 st.markdown("""
