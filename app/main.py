@@ -9,6 +9,11 @@ import plotly.graph_objects as go
 import plotly.express as px
 import shap
 
+# Get the absolute path to the artifacts directory
+# Assumes the script is in 'app' and artifacts are in '../artifacts'
+artifacts_path = Path(__file__).parent.parent / "artifacts"
+
+
 # ─────────────────────────────────────────
 # PAGE CONFIG
 # ─────────────────────────────────────────
@@ -117,17 +122,17 @@ div[data-testid="stMetric"] {
     padding: 1rem !important;
     box-shadow: var(--shadow-sm) !important;
 }
-div[data-testid="stMetric"] label { 
-    color: var(--text-muted) !important; 
-    font-size: 0.75rem !important; 
+div[data-testid="stMetric"] label {
+    color: var(--text-muted) !important;
+    font-size: 0.75rem !important;
     font-weight: 500 !important;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-div[data-testid="stMetric"] div[data-testid="stMetricValue"] { 
-    color: var(--text-primary) !important; 
-    font-size: 1.8rem !important; 
-    font-weight: 700 !important; 
+div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
+    color: var(--text-primary) !important;
+    font-size: 1.8rem !important;
+    font-weight: 700 !important;
 }
 
 /* Tabs */
@@ -169,7 +174,7 @@ summary {
 }
 
 /* Divider */
-hr { 
+hr {
     border-color: var(--border) !important;
     margin: 1.5rem 0 !important;
 }
@@ -279,10 +284,10 @@ hr {
 # ─────────────────────────────────────────
 @st.cache_resource(show_spinner="🫀 Loading NovaHeart Engine...")
 def load_artifacts():
-    imputer = joblib.load("../artifacts/clinical_knn_imputer.pkl")
+    imputer = joblib.load(artifacts_path / "clinical_knn_imputer.pkl")
     model = CatBoostClassifier()
-    model.load_model("../artifacts/heart_failure_catboost_core.cbm")
-    with open("../artifacts/feature_schema_lock.json") as f:
+    model.load_model(artifacts_path / "heart_failure_catboost_core.cbm")
+    with open(artifacts_path / "feature_schema_lock.json") as f:
         schema = json.load(f)
     return imputer, model, schema
 
@@ -458,26 +463,26 @@ def feature_bar_chart(inputs):
 
 def create_shap_waterfall(shap_values, base_value, features_df, top_n=10):
     """Create a waterfall chart visualization for SHAP values"""
-    
+
     # Get feature names and SHAP values
     feature_names = features_df.columns.tolist()
     shap_vals = shap_values[0] if len(shap_values.shape) > 1 else shap_values
-    
+
     # Create dataframe of feature contributions
     contributions = pd.DataFrame({
         'feature': feature_names,
         'shap_value': shap_vals,
         'abs_shap': np.abs(shap_vals)
     })
-    
+
     # Sort by absolute contribution and get top N
     contributions = contributions.sort_values('abs_shap', ascending=False).head(top_n)
-    
+
     # Calculate cumulative contributions
     base_prob = base_value
     cumulative = base_prob
     contributions['cumulative_start'] = cumulative
-    
+
     waterfall_data = []
     for idx, row in contributions.iterrows():
         cumulative += row['shap_value']
@@ -488,12 +493,12 @@ def create_shap_waterfall(shap_values, base_value, features_df, top_n=10):
             'end': cumulative,
             'is_positive': row['shap_value'] > 0
         })
-    
+
     final_prob = cumulative
-    
+
     # Create Plotly waterfall chart
     fig = go.Figure()
-    
+
     # Add base value bar
     fig.add_trace(go.Bar(
         name='Base Value',
@@ -504,7 +509,7 @@ def create_shap_waterfall(shap_values, base_value, features_df, top_n=10):
         textposition='outside',
         width=0.6
     ))
-    
+
     # Add contribution bars
     for item in waterfall_data:
         color = '#ef4444' if item['is_positive'] else '#3b82f6'
@@ -518,7 +523,7 @@ def create_shap_waterfall(shap_values, base_value, features_df, top_n=10):
             width=0.6,
             base=[item['start']]
         ))
-    
+
     # Add final prediction bar
     fig.add_trace(go.Bar(
         name='Final Prediction',
@@ -529,7 +534,7 @@ def create_shap_waterfall(shap_values, base_value, features_df, top_n=10):
         textposition='outside',
         width=0.6
     ))
-    
+
     fig.update_layout(
         title=dict(
             text="Clinical Evidence Breakdown — SHAP Feature Contributions",
@@ -556,20 +561,20 @@ def create_shap_waterfall(shap_values, base_value, features_df, top_n=10):
         font=dict(family='Inter'),
         margin=dict(t=60, b=80, l=40, r=40)
     )
-    
+
     return fig, contributions
 
 
 def create_shap_summary_table(contributions):
     """Create a styled summary table of SHAP contributions"""
-    
+
     contributions['direction'] = contributions['shap_value'].apply(
         lambda x: '↑ Increases Risk' if x > 0 else '↓ Decreases Risk'
     )
     contributions['impact'] = contributions['shap_value'].apply(
         lambda x: f"+{x:.4f}" if x > 0 else f"{x:.4f}"
     )
-    
+
     # Style with colors
     def color_impact(val):
         if '+' in str(val):
@@ -577,12 +582,12 @@ def create_shap_summary_table(contributions):
         elif '-' in str(val):
             return 'color: #2563eb; font-weight: 600'
         return ''
-    
+
     styled = contributions[['feature', 'impact', 'direction', 'abs_shap']].head(10)
     styled.columns = ['Feature', 'Impact', 'Direction', '|Impact|']
     styled['Impact'] = styled['Impact'].apply(lambda x: f"{float(x):+.4f}" if isinstance(x, (int, float)) else x)
     styled['|Impact|'] = styled['|Impact|'].apply(lambda x: f"{x:.4f}")
-    
+
     return styled
 
 
@@ -772,7 +777,7 @@ if not run_btn:
             are safely handled without crashing the pipeline. Feature schema is locked to prevent training-serving skew.
             </p>
             <p style='color:#475569; line-height:1.8; margin-top:0.5rem;'>
-            <b style='color:#2563eb;'>🔬 SHAP (SHapley Additive exPlanations)</b> provides interpretable AI by showing exactly 
+            <b style='color:#2563eb;'>🔬 SHAP (SHapley Additive exPlanations)</b> provides interpretable AI by showing exactly
             which clinical features contributed to the prediction and by how much — enabling truly transparent clinical decision support.
             </p>
             <hr>
@@ -792,7 +797,7 @@ else:
         care = compute_care_plan(patient_inputs, risk_prob)
         risk_cls = care["risk_class"]
         r_color = risk_color(risk_cls)
-        
+
         # Compute SHAP values
         shap_contributions = None
         shap_fig = None
@@ -834,9 +839,9 @@ else:
                 </div>
             </div>
             """, unsafe_allow_html=True)
-            
+
             st.plotly_chart(shap_fig, use_container_width=True, config={"displayModeBar": False})
-            
+
             # Add interpretation guide
             with st.expander("📖 How to interpret this chart"):
                 st.markdown("""
@@ -850,11 +855,11 @@ else:
                     </ul>
                 </div>
                 """, unsafe_allow_html=True)
-            
+
             # Feature impact summary table
             if shap_table is not None:
                 st.markdown('<div class="section-header" style="margin-top:1rem;">🔑 Top Feature Impacts</div>', unsafe_allow_html=True)
-                
+
                 # Create styled HTML table
                 table_html = """
                 <table style='width:100%; border-collapse:collapse; background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 1px 2px rgba(0,0,0,0.05);'>
@@ -868,12 +873,12 @@ else:
                     </thead>
                     <tbody>
                 """
-                
+
                 for _, row in shap_table.iterrows():
                     direction_color = "#dc2626" if "Increases" in row['Direction'] else "#2563eb"
                     impact_color = "#dc2626" if "+" in str(row['Impact']) else "#2563eb"
                     impact_sign = "▲" if "+" in str(row['Impact']) else "▼"
-                    
+
                     table_html += f"""
                         <tr style='border-bottom:1px solid #f1f5f9;'>
                             <td style='padding:10px 16px; font-size:0.85rem; font-weight:500; color:#1e293b;'>{row['Feature']}</td>
@@ -882,14 +887,14 @@ else:
                             <td style='padding:10px 16px; text-align:center; font-size:0.8rem; font-family:monospace; color:#64748b;'>{row['|Impact|']}</td>
                         </tr>
                     """
-                
+
                 table_html += """
                     </tbody>
                 </table>
                 """
-                
+
                 st.markdown(table_html, unsafe_allow_html=True)
-                
+
                 st.info("💡 **Clinical Insight**: Features with larger |Impact| values have the strongest influence on the prediction. Red/increasing features may represent modifiable risk factors.")
         else:
             st.warning("SHAP explanations are currently unavailable. Ensure the model is properly configured with SHAP support.")
