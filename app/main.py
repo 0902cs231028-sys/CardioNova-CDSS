@@ -279,10 +279,10 @@ hr {
 # ─────────────────────────────────────────
 @st.cache_resource(show_spinner="🫀 Loading NovaHeart Engine...")
 def load_artifacts():
-    imputer = joblib.load("clinical_knn_imputer.pkl")
+    imputer = joblib.load("../artifacts/clinical_knn_imputer.pkl")
     model = CatBoostClassifier()
-    model.load_model("heart_failure_catboost_core.cbm")
-    with open("feature_schema_lock.json") as f:
+    model.load_model("../artifacts/heart_failure_catboost_core.cbm")
+    with open("../artifacts/feature_schema_lock.json") as f:
         schema = json.load(f)
     return imputer, model, schema
 
