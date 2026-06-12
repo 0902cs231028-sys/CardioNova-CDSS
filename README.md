@@ -2,6 +2,8 @@
 
 ### Clinical Decision Support System for Heart Failure Detection & Automated Care Management
 
+**Live Demo:** [https://cardionova.streamlit.app/](https://cardionova.streamlit.app/)
+
 ---
 
 ## 1. Overview
@@ -10,18 +12,24 @@
 
 Unlike traditional black-box prediction systems, this platform transforms model outputs into clinically interpretable actions through:
 
-- Risk stratification for heart failure prediction  
-- Explainable AI insights using SHAP-based attribution  
-- Guideline-driven treatment logic aligned with ACC/AHA principles  
+- Risk stratification for heart failure prediction
+- Explainable AI insights using SHAP-based attribution
+- Guideline-driven treatment logic aligned with ACC/AHA principles
 
 The system is designed for **point-of-care decision assistance**, not standalone diagnosis.
 
 ---
 
-## 2. System Architecture
+## 2. Project Structure
 
 ```text
 SPDN-CardioNova-CDSS/
+├── app/                        # Streamlit frontend (point-of-care UI)
+│   ├── assets/                 # CSS and JS for the Streamlit app
+│   │   ├── style.css
+│   │   └── main.js
+│   └── main.py                 # Application entrypoint
+│
 ├── artifacts/                  # Trained models & serialized assets
 │   ├── clinical_knn_imputer.pkl
 │   ├── feature_schema_lock.json
@@ -34,11 +42,22 @@ SPDN-CardioNova-CDSS/
 │   ├── explainability.py       # SHAP-based explanations
 │   └── clinical_rules.py       # Rule-based GDMT engine
 │
-└── app/                        # Streamlit frontend (point-of-care UI)
-    ├── main.py                # Application entrypoint
-    └── components/
-        └── intake_form.py     # Patient data input form
-````
+├── Data/                       # Datasets used for training
+│   ├── CAD.csv
+│   └── heart_disease_uci.csv
+│
+├── Docs/                       # Project documentation
+│   ├── Heart_Failure_Detection_and_Management_System.pdf
+│   └── Heart_Failure_System_Presentation.pptx
+│
+├── Notebook/                   # Jupyter notebooks for experimentation
+│   ├── heart-disease-detection.ipynb
+│   └── novaheart-disease-detection.ipynb
+│
+├── train.py                    # Script for training the model
+├── requirements.txt            # Project dependencies
+└── README.md                   # Project README file
+```
 
 ---
 
